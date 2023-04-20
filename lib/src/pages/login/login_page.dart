@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ss_marker_flutter/src/config/route.dart' as custom_route;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:ss_marker_flutter/src/config/theme.dart' as custom_theme;
+import 'package:ss_marker_flutter/src/constants/setting.dart';
 import 'package:ss_marker_flutter/src/models/credential_model.dart';
+import 'package:ss_marker_flutter/src/services/network_services.dart';
 
 import '../../bloc/user_bloc/user_bloc.dart';
 
@@ -98,16 +101,27 @@ class _LoginPageState extends State<LoginPage> {
                                   child: TextButton(
                                       onPressed: () async {
                                         _form.currentState?.save();
-                                        context.read<UserBloc>().add(
-                                            UserEventLogin(
-                                                credential: _credential));
-                                        Future.delayed(
-                                                const Duration(seconds: 1))
-                                            .then((value) => {
-                                                  Navigator
-                                                      .pushReplacementNamed(
-                                                          context, '/')
-                                                });
+                                        final result = await NetworkService()
+                                            .userLogin(_credential);
+                                        SharedPreferences prefs =
+                                            await SharedPreferences
+                                                .getInstance();
+                                        prefs.setString(
+                                            Setting.token, result['token']);
+                                        prefs.setString(
+                                            Setting.email, result['email']);
+                                        if(!mounted) return;
+                                        Navigator.pushReplacementNamed(
+                                            context, '/');
+
+                                        // Navigator.pushReplacementNamed(context, "/");
+                                        // Future.delayed(
+                                        //         const Duration(seconds: 1))
+                                        //     .then((value) => {
+                                        //           Navigator
+                                        //               .pushReplacementNamed(
+                                        //                   context, '/')
+                                        //         });
                                       },
                                       style: TextButton.styleFrom(
                                         foregroundColor: custom_theme
